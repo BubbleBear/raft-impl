@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package raft;
+
+service Election {
+    rpc Vote (Request) returns (Response) {};
+}
+
+message Request {
+    int32 term = 1;
+    int32 candidateId = 2;
+    int32 lastLogIndex = 3;
+    int32 lastLogTerm = 4;
+}
+
+message Response {
+    int32 term = 1;
+    bool granted = 2;
+}
