@@ -1,12 +1,9 @@
 const StateMachine = require('../built/state_machine/common').default;
+const config = require('./config.json');
 
 const s = new StateMachine();
 
-const target = {
-    host: '0.0.0.0',
-    port: '8888'
-}
-
+s.config = config;
 s.id = 1;
 
-s.election.requestVote(target);
+s.election.requestVote(s.config[0]);

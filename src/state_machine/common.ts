@@ -10,7 +10,15 @@ class CommonState extends EventEmitter {
 
     currentTerm: number = 0;
 
+    // implicit states:
+    // 1. follower if id != leaderId && id != votedFor
+    // 2. candidate if id != leaderId && id == votedFor
+    // 3. leader if id == leaderId
+    leaderId: number = null;
+
     votedFor: number = null;
+
+    votes: number = 0;
 
     log: Array<Entry> = [];
 
@@ -28,29 +36,68 @@ class CommonState extends EventEmitter {
     constructor() {
         super();
         this.election = new Election(this);
+        this.registerEvents();
     }
 
-    registerServices() {
-        ;
+    registerEvents() {
+        Reflect.ownKeys(events).map((v: string) => {
+            this.removeAllListeners(v);
+            this.on(v, events[v].bind(this));
+        });
     }
 
     run() {
         ;
     }
+
+    campaign() {
+        this.resetElectionTimer();
+        this.config.map((v) => {
+            const target = { host: v.host, port: v.port };
+            this.election.requestVote(target);
+        });
+    }
+
+    resetTimer() {
+        console.log(this.id);
+    }
+
+    resetElectionTimer() {
+        ;
+    }
 }
 
 const events = {
-    heartbeat() {},
+    timeout() {
+        this.leaderId = null;
+        this.votedFor = this.id;
+    },
 
-    timeout() {},
+    electionStarts() {
+        this.currentTerm++;
+        this.campaign();
+    },
 
-    electing() {},
+    voted() {
+        const majority = this.config.length / 2 + 1;
+        this.votes++;
+        if (this.votes > majority) {
+            this.emit('electionEnds');
+            this.emit('elected');
+        }
+    },
+
+    electionTimeout() {
+        this.campaign();
+    },
 
     electionEnds() {
         this.votedFor = null;
     },
 
-    promoted() {}
+    elected() {
+        this.leaderId = this.id;
+    }
 }
 
 export default CommonState;

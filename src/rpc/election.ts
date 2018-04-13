@@ -13,16 +13,18 @@ class Election {
 
     requestVote(target) {
         const s = this.stateEntity;
-        const client = new proto.Election(`${target.host}:${target.port}`, grpc.credentials.createInsecure());
-        if (true) {
+        try {
+            const client = new proto.Election(`${target.host}:${target.port}`, grpc.credentials.createInsecure());
             client.vote({
                 term: s.currentTerm,
                 candidateId: s.id,
                 // lastLogIndex: s.log.length - 1,
                 // lastLogTerm: s.log[s.log.length - 1].term
             }, (err, res) => {
-                err && console.log(err) || console.log(res);
+                err && console.log(err) || console.log(res) && console.log(1);
             })
+        } catch (e) {
+            // console.log(e);
         }
     }
 
@@ -36,6 +38,7 @@ class Election {
                 0) {
                 callback(null, { term: s.currentTerm, granted: false });
             }
+            s.emit('resetTimer');
             callback(null, { term: s.currentTerm, granted: true });
         }
     }
