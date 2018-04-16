@@ -13,19 +13,20 @@ class Election {
 
     requestVote(target) {
         const s = this.stateEntity;
-        try {
-            const client = new proto.Election(`${target.host}:${target.port}`, grpc.credentials.createInsecure());
-            client.vote({
-                term: s.currentTerm,
-                candidateId: s.id,
-                // lastLogIndex: s.log.length - 1,
-                // lastLogTerm: s.log[s.log.length - 1].term
-            }, (err, res) => {
-                err && console.log(err) || console.log(res) && console.log(1);
-            })
-        } catch (e) {
-            // console.log(e);
-        }
+        const client = new proto.Election(`${target.host}:${target.port}`, grpc.credentials.createInsecure());
+        client.vote({
+            term: s.currentTerm,
+            candidateId: s.id,
+            // lastLogIndex: s.log.length - 1,
+            // lastLogTerm: s.log[s.log.length - 1].term
+        }, (err, res) => {
+            if (err) {
+                console.log(err.details);
+                return;
+            }
+            console.log(res);
+            this.stateEntity.emit('voted');
+        })
     }
 
     voteWrapper() {
@@ -38,7 +39,8 @@ class Election {
                 0) {
                 callback(null, { term: s.currentTerm, granted: false });
             }
-            s.emit('resetTimer');
+            s.votedFor = req.candidateId;
+            s.resetTimer();
             callback(null, { term: s.currentTerm, granted: true });
         }
     }

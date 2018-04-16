@@ -33,6 +33,10 @@ class CommonState extends EventEmitter {
 
     server: any = new grpc.Server();
 
+    timer: any = null;
+
+    electionTimer: any = null;
+
     constructor() {
         super();
         this.election = new Election(this);
@@ -41,7 +45,6 @@ class CommonState extends EventEmitter {
 
     registerEvents() {
         Reflect.ownKeys(events).map((v: string) => {
-            this.removeAllListeners(v);
             this.on(v, events[v].bind(this));
         });
     }
@@ -51,7 +54,6 @@ class CommonState extends EventEmitter {
     }
 
     campaign() {
-        this.resetElectionTimer();
         this.config.map((v) => {
             const target = { host: v.host, port: v.port };
             this.election.requestVote(target);
@@ -59,28 +61,39 @@ class CommonState extends EventEmitter {
     }
 
     resetTimer() {
-        console.log(this.id);
+        console.log(`id: ${this.id} resetTimer`);
     }
 
     resetElectionTimer() {
-        ;
+        clearTimeout(this.electionTimer);
+        this.electionTimer = setTimeout(() => {
+            this.emit('electionTimeout');
+        }, 300 * Math.random());
+        console.log(`id: ${this.id} resetElectionTimer`);
     }
 }
 
 const events = {
     timeout() {
+        console.log('timeout');
         this.leaderId = null;
-        this.votedFor = this.id;
+        // this.votedFor = this.id;
+        this.emit('electionStarts');
     },
 
     electionStarts() {
+        console.log('election starts');
         this.currentTerm++;
+        this.electionTimer = setTimeout(() => {
+            this.emit('electionTimeout');
+        }, 300 * Math.random());
         this.campaign();
     },
 
     voted() {
-        const majority = this.config.length / 2 + 1;
+        const majority = this.config.length / 2;
         this.votes++;
+        console.log(`voted.\tvotes: ${this.votes}`);
         if (this.votes > majority) {
             this.emit('electionEnds');
             this.emit('elected');
@@ -88,15 +101,23 @@ const events = {
     },
 
     electionTimeout() {
+        console.log('election timeout');
+        this.votes = 0;
+        this.resetElectionTimer();
         this.campaign();
     },
 
     electionEnds() {
+        clearTimeout(this.electionTimer);
+        this.electionTimer = null;
+        console.log('election ends');
         this.votedFor = null;
+        this.votes = 0;
     },
 
     elected() {
         this.leaderId = this.id;
+        console.log(`${this.id} has become leader`);
     }
 }
 

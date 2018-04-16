@@ -10,4 +10,4 @@ s.id = 0;
 s.server.bind(`${s.config[s.id].host}:${s.config[s.id].port}`, grpc.ServerCredentials.createInsecure());
 s.server.start();
 
-s.campaign();
+s.emit('timeout');
