@@ -3,7 +3,7 @@ syntax = "proto3";
 package raft;
 
 service Replication {
-    rpc Entry (Request) returns (Response) {};
+    rpc AppendEntry (Request) returns (Response) {};
 }
 
 message Request {

@@ -1,10 +1,24 @@
-[
-    {
-        "host": "0.0.0.0",
-        "port": "7001"
-    },
-    {
-        "host": "0.0.0.0",
-        "port": "7002"
-    }
-]
+{
+    "minTimeout": 150,
+    "maxTimeout": 300,
+    "minElectionTimeout": 10,
+    "maxElectionTimeout": 500,
+    "hosts": [
+        {
+            "host": "0.0.0.0",
+            "port": "7001"
+        },
+        {
+            "host": "0.0.0.0",
+            "port": "7002"
+        },
+        {
+            "host": "0.0.0.0",
+            "port": "7003"
+        },
+        {
+            "host": "0.0.0.0",
+            "port": "7004"
+        }
+    ]
+}

@@ -3,7 +3,7 @@ syntax = "proto3";
 package raft;
 
 service Election {
-    rpc Vote (Request) returns (Response) {};
+    rpc RequestVote (Request) returns (Response) {};
 }
 
 message Request {

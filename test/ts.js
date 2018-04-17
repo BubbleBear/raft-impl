@@ -7,7 +7,7 @@ const s = new StateMachine();
 s.config = config;
 s.id = 0;
 
-s.server.bind(`${s.config[s.id].host}:${s.config[s.id].port}`, grpc.ServerCredentials.createInsecure());
+s.server.bind(`${s.config.hosts[s.id].host}:${s.config.hosts[s.id].port}`, grpc.ServerCredentials.createInsecure());
 s.server.start();
 
 s.emit('timeout');
