@@ -1,7 +1,7 @@
 export class Entry {
     term: number;
 
-    command: string | undefined;
+    command: string;
 
     constructor(term: number, command?: string) {
         this.term = term;
