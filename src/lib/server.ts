@@ -56,7 +56,7 @@ export class Server {
                 if ((<any>e).code === 'EADDRINUSE') {
                     console.log(`port ${port} in use, trying port: ${port + 1}`);
                     self.server.removeAllListeners();
-                    self.listen(port + 1);
+                    resolve(self.listen(port + 1));
                 }
             }
         })
@@ -74,14 +74,16 @@ export class Server {
     }
 
     appendEntries(arg: appendEntriesArg) {
-        console.log('appending entries')
+        console.log('appending')
     }
 
-    onAppendEntries(arg: appendEntriesArg) { }
+    onAppendEntries(arg: appendEntriesArg) {
+        console.log(arg)
+    }
 
     requestVote(arg: requestVoteArg) {
         const connection: net.Socket = net.connect({ port: 5556 });
     }
 
-    onRequestVote(arg: requestVoteArg) { }
+    onRequestVote(arg: requestVoteArg) {}
 }
