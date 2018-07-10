@@ -1,8 +1,12 @@
 import { Server } from './lib/server';
+import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from 'constants';
 
-const server = new Server(0);
+let server = new Server(0);
 
-server.listen(Number(process.argv[2]) || 5555)
-.then((s: Server) => {
-    s.appendEntries({ ip: process.argv[3] } as any)
-});
+async function start () {
+    server = await server.listen(Number(process.argv[2]) || 5555);
+    const res = await server.appendEntries({ port: process.argv[3] } as any);
+    console.log(res)
+}
+
+start();

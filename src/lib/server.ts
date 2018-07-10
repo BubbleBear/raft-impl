@@ -1,6 +1,7 @@
 import * as net from 'net';
 import { Entry, Log } from "./log";
 import { EADDRINUSE } from 'constants';
+import { Readable } from 'stream';
 
 export interface requestVoteArg {
     term: number;
@@ -43,7 +44,7 @@ export class Server {
             self.server
                 .on('listening', onlistening)
                 .on('error', onerror)
-                .on('connection', self.route)
+                .on('connection', self.route.bind(self))
                 .listen({ port });
 
 
@@ -62,23 +63,87 @@ export class Server {
         })
     }
 
-    private route(connection: net.Socket) {
-        const methodName: string = connection.read();
+    private async readAsync(ctx: Readable) {
+        if (ctx instanceof Readable === false) {
+            throw new Error('readAsync must be called with Readable Stream as context, please bind it with a stream or socket first');
+        }
+
+        ctx.isPaused() || ctx.pause();
+
+        return new Promise((resolve, reject) => {
+            ctx
+                .removeListener('readable', onreadable)
+                .removeListener('error', onerror)
+                .once('readable', onreadable)
+                .once('error', onerror)
+
+            function onreadable() {
+                resolve(ctx.read());
+            }
+
+            function onerror (e) {
+                reject(e);
+            }
+        })
+    }
+
+    private async route(connection: net.Socket) {
+        console.log('connection incoming')
+        const methodName: string = <string>(await this.readAsync(connection)).toString();
         if (typeof this[methodName] === 'function') {
             connection.write(`invoking ${methodName}`);
-            const args = connection.read();
+            const args = <string>await this.readAsync(connection);
             const parsed = JSON.parse(args);
             connection.write(this[methodName](parsed));
         }
         connection.end();
     }
 
-    appendEntries(arg: appendEntriesArg) {
-        console.log('appending')
+    private async connect(port: number): Promise<net.Socket> {
+        const self = this;
+
+        return new Promise((resolve: (value: net.Socket | PromiseLike<net.Socket>) => void, reject) => {
+            const socket: net.Socket = net.connect({ port: port });
+            socket
+                .on('connect', () => {
+                    console.log('connected')
+                    resolve(socket) })
+                .on('error', onerror);
+
+            function onerror(e) {
+                setTimeout(() => {
+                    console.log(e.message, 'reconnecting...')
+                    resolve(self.connect(port));
+                }, 500)
+            }
+        })
+    }
+
+    private async callRemote(options, fnName, args) {
+        const socket = await this.connect((<any>options).port);
+        socket.write(fnName);
+        const recv = (await this.readAsync(socket)).toString();
+        let res: any = false;
+        if (recv == `invoking ${fnName}`) {
+            socket.write(JSON.stringify(args));
+            res = (await this.readAsync(socket)).toString();
+        }
+        socket.end();
+        return res;
+    }
+
+    async appendEntries(args: appendEntriesArg) {
+        const res = this.callRemote({ port: (<any>args).port }, 'onAppendEntries', {
+            a: 1,
+            b: 2,
+            c: 3,
+        });
+
+        return res;
     }
 
     onAppendEntries(arg: appendEntriesArg) {
-        console.log(arg)
+        return 'success'
     }
 
     requestVote(arg: requestVoteArg) {
