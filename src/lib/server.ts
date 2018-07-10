@@ -94,7 +94,7 @@ export class Server {
             connection.write(`invoking ${methodName}`);
             const args = <string>await this.readAsync(connection);
             const parsed = JSON.parse(args);
-            connection.write(this[methodName](parsed));
+            connection.write(JSON.stringify(this[methodName](parsed)));
         }
         connection.end();
     }
@@ -129,26 +129,24 @@ export class Server {
             res = (await this.readAsync(socket)).toString();
         }
         socket.end();
-        return res;
+        return JSON.parse(res);
     }
 
-    async appendEntries(args: appendEntriesArg) {
-        const res = this.callRemote({ port: (<any>args).port }, 'onAppendEntries', {
+    remoteAppendEntries(args: appendEntriesArg) {
+        return this.callRemote({ port: (<any>args).port }, 'appendEntries', {
             a: 1,
             b: 2,
-            c: 3,
-        });
-
-        return res;
+            c: 3
+        })
     }
 
-    onAppendEntries(arg: appendEntriesArg) {
+    private appendEntries(args: appendEntriesArg) {
+        return args;
+    }
+
+    remoteRequestVote(args: requestVoteArg) {}
+
+    private requestVote(args: requestVoteArg) {
         return 'success'
     }
-
-    requestVote(arg: requestVoteArg) {
-        const connection: net.Socket = net.connect({ port: 5556 });
-    }
-
-    onRequestVote(arg: requestVoteArg) {}
 }
