@@ -119,17 +119,17 @@ export class Server {
         })
     }
 
-    private async callRemote(options, fnName, args) {
+    private async callRemote(options, fnName, args = null) {
         const socket = await this.connect((<any>options).port);
         socket.write(fnName);
         const recv = (await this.readAsync(socket)).toString();
         let res: any = false;
         if (recv == `invoking ${fnName}`) {
             socket.write(JSON.stringify(args));
-            res = await this.readAsync(socket);
+            res = (await this.readAsync(socket)).toString();
         }
         socket.end();
-        return res;
+        return JSON.parse(res);
     }
 
     remoteAppendEntries(options, args?: appendEntriesArg) {
