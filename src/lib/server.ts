@@ -132,15 +132,11 @@ export class Server {
         return JSON.parse(res);
     }
 
-    remoteAppendEntries(args: appendEntriesArg) {
-        return this.callRemote({ port: (<any>args).port }, 'appendEntries', {
-            a: 1,
-            b: 2,
-            c: 3
-        })
+    remoteAppendEntries(options, args?: appendEntriesArg) {
+        return this.callRemote(options, 'appendEntries', args)
     }
 
-    private appendEntries(args: appendEntriesArg) {
+    private appendEntries(args?: appendEntriesArg) {
         return args;
     }
 
