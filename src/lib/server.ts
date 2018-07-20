@@ -126,10 +126,10 @@ export class Server {
         let res: any = false;
         if (recv == `invoking ${fnName}`) {
             socket.write(JSON.stringify(args));
-            res = (await this.readAsync(socket)).toString();
+            res = await this.readAsync(socket);
         }
         socket.end();
-        return JSON.parse(res);
+        return res;
     }
 
     remoteAppendEntries(options, args?: appendEntriesArg) {
