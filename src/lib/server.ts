@@ -27,6 +27,8 @@ export class Server {
 
     private leaderId: number | string | null;
 
+    private votes: number = 0;
+
     private log: Log = new Log;
 
     private server: net.Server = net.createServer({ pauseOnConnect: true });
@@ -136,13 +138,26 @@ export class Server {
         return this.callRemote(options, 'appendEntries', args)
     }
 
-    private appendEntries(args?: appendEntriesArg) {
-        return args;
+    private appendEntries(args?: appendEntriesArg): boolean {
+        if (!args) return true;
+        if (args.term < this.currentTerm) return false;
     }
 
-    remoteRequestVote(args: requestVoteArg) {}
+    remoteRequestVote(options, args: requestVoteArg) {
+        {
+            const granted = this.callRemote(options, 'requestVote', args);
+            granted && this.votes++;
+        }
+    }
 
     private requestVote(args: requestVoteArg) {
-        return 'success'
+        if (args.term < this.currentTerm) return false;
+        if (
+            (this.votedFor === null || this.votedFor == args.candidateId)
+            && args.lastLogIndex >= this.log.length() - 1
+            && args.lastLogTerm >= this.log.last().term
+        ) {
+            return true;
+        }
     }
 }

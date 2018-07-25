@@ -12,7 +12,15 @@ export class Entry {
 export class Log {
     entries: Entry[] = [];
 
+    length() {
+        return this.entries.length;
+    }
+
     append(term: number, command?: string) {
         this.entries.push(new Entry(term, command));
+    }
+
+    last() {
+        return this.entries[this.entries.length - 1];
     }
 }
